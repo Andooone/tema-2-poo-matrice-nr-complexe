@@ -1,5 +1,5 @@
 #include <fstream>
-#include <iostream>
+#include <istream>
 
 using namespace std;
 ifstream fin("test.in");
@@ -165,14 +165,26 @@ public:
     matrice(const matrice& mat);
     virtual ~matrice();
     void Setelem(int i,int j,complex x);
+    friend istream& operator>>(istream &in,matrice &a) {
+        a.citeste(in);
+        return in;
+    }
+    friend ostream& operator<<(ostream&out,const matrice&a){
+       a.afis(out);
+       return out;
+
+    }
+    virtual void citeste(istream &in) = 0;
+    virtual void afis(ostream &out)const=0;
     int Getlin();
     int Getcol();
     complex** Getmat();
     virtual void Afisare()=0;
     void Set(int linn,int coll);
-    virtual int Triunghiulara() {};
-    virtual bool Diagonala(){};
-    virtual int TRplusD() {};
+    virtual int Triunghiulara() {return 0;};
+    virtual bool Diagonala(){return 0;};
+    virtual int TRplusD() {return 0;};
+
 };
 
 matrice::matrice()
@@ -211,7 +223,7 @@ matrice::~matrice()
 {
     for(int i=0;i<lin;i++)
      delete []v[i];
-
+delete []v;
 }
 
 complex** matrice::Getmat()
@@ -240,8 +252,12 @@ void matrice::Afisare()
     fout<<"\n";
    }
 }
+/*
+istream& matrice::operator>>(istream &in,matrice &a)
+{
 
-
+}
+*/
 class matrice_oarecare: public matrice
 {
 public:
@@ -251,15 +267,51 @@ public:
     virtual ~matrice_oarecare() {};
     bool operator==(const matrice_oarecare &) const;
     bool operator!=(const matrice_oarecare &a) const;
+    void citeste(istream&in);
+    void afis(ostream &out)const;
     matrice_oarecare operator=(const matrice_oarecare &a) ;
     matrice_oarecare operator+( matrice_oarecare &a);
     matrice_oarecare operator-( matrice_oarecare &a);
     matrice_oarecare operator*( matrice_oarecare &a);
-    friend  istream& operator>>(istream &in,matrice_oarecare &a);
-    friend  ostream& operator<<(ostream &out,const matrice_oarecare &a);
     void Afisare();
     matrice_oarecare Transpusa();
 };
+void matrice_oarecare::citeste(istream &in)
+{
+  for(int i=0;i<this->lin;i++)
+    delete[]this->v[i];
+    delete []this->v;
+    this->v==NULL;
+
+    int x,y;
+    in>>x;
+    in>>y;
+    this->lin=x;
+    this->col=y;
+    complex p;
+     this->v=new complex*[this->lin];
+    for(int i=0; i<this->lin; i++)
+        this->v[i]=new complex[this->col];
+    for(int i=0; i<this->lin; i++)
+        for(int j=0; j<this->col; j++)
+        {
+            fin>>p;
+            this->v[i][j]=p;
+        }
+}
+
+void matrice_oarecare::afis(ostream& out) const
+
+{
+    out<<this->lin<<" "<<this->col<<"\n";
+    for(int i=0; i<this->lin; i++)
+    {
+        for(int j=0; j<this->col; j++)
+            out<<this->v[i][j]<<" ";
+        out<<"\n";
+    }
+}
+
 
 bool matrice_oarecare::operator==(const matrice_oarecare &a) const
 {
@@ -322,43 +374,13 @@ matrice_oarecare matrice_oarecare::operator*( matrice_oarecare &a)
     }
 }
 
-istream& operator>>(istream &in,matrice_oarecare &a)
-{
-    for(int i=0;i<a.lin;i++)
-    delete[]a.v[i];
-
-    (complex**) a.v==NULL;
-    complex p;
-    fin>>a.lin>>a.col;
-    a.v=new complex*[a.lin];
-    for(int i=0; i<a.lin; i++)
-        a.v[i]=new complex[a.col];
-    for(int i=0; i<a.lin; i++)
-        for(int j=0; j<a.col; j++)
-        {
-            fin>>p;
-            a.v[i][j]=p;
-        }
-    return in;
-}
-
-ostream& operator<<(ostream &out,const matrice_oarecare &a)
-{
-    out<<a.lin<<" "<<a.col<<"\n";
-    for(int i=0; i<a.lin; i++)
-    {
-        for(int j=0; j<a.col; j++)
-            out<<a.v[i][j]<<" ";
-        out<<"\n";
-    }
-    return out;
-}
 
 matrice_oarecare matrice_oarecare::operator=(const matrice_oarecare &a)
 {
     for(int i=0;i<lin;i++)
     delete[]v[i];
-    complex** v=NULL;
+     delete[]v;
+     v=NULL;
 
    this->lin=a.lin;
     this->col=a.col;
@@ -399,8 +421,8 @@ class matrice_patratica:public matrice
   matrice_patratica(int dim) :matrice(dim,dim){};
   matrice_patratica(const matrice_patratica &mat) :matrice(mat) {};
   ~matrice_patratica(){};
-  friend istream& operator>>(istream &in,matrice_patratica &a);
-  friend ostream& operator<<(ostream &out,const matrice_patratica &a);
+  void citeste(istream& in);
+  void afis(ostream &out)const;
   matrice_patratica operator+(matrice_patratica &a);
   matrice_patratica operator*(matrice_patratica &a);
   matrice_patratica operator=(const matrice_patratica &a);
@@ -414,41 +436,42 @@ class matrice_patratica:public matrice
   matrice_patratica Inversa();
 };
 
-istream& operator>>(istream &in,matrice_patratica &a)
-{  for(int i=0;i<a.lin;i++)
-    delete[]a.v[i];
 
-    (complex**) a.v==NULL;
+void matrice_patratica::citeste(istream& in)
+{
+  for(int i=0;i<this->lin;i++)
+    delete[]this->v[i];
+    delete []this->v;
+    this->v==NULL;
 
     int x;
     in>>x;
-    a.lin=x;
-    a.col=x;
+    this->lin=x;
+    this->col=x;
     complex p;
-     a.v=new complex*[a.lin];
-    for(int i=0; i<a.lin; i++)
-        a.v[i]=new complex[a.col];
-    for(int i=0; i<a.lin; i++)
-        for(int j=0; j<a.col; j++)
+     this->v=new complex*[this->lin];
+    for(int i=0; i<this->lin; i++)
+        this->v[i]=new complex[this->col];
+    for(int i=0; i<this->lin; i++)
+        for(int j=0; j<this->col; j++)
         {
             fin>>p;
-            a.v[i][j]=p;
+            this->v[i][j]=p;
         }
-
-    return in;
 }
 
-ostream& operator<<(ostream &out,const matrice_patratica &a)
+void matrice_patratica::afis(ostream& out)const
 {
-  out<<a.lin<<" "<<"\n";
-    for(int i=0; i<a.lin; i++)
+    out<<this->lin<<"\n";
+    for(int i=0; i<this->lin; i++)
     {
-        for(int j=0; j<a.col; j++)
-            out<<a.v[i][j]<<" ";
+        for(int j=0; j<this->col; j++)
+            out<<this->v[i][j]<<" ";
         out<<"\n";
     }
-    return out;
+
 }
+
 
 matrice_patratica matrice_patratica::operator+( matrice_patratica &a)
 {
@@ -521,7 +544,8 @@ matrice_patratica matrice_patratica::operator=(const matrice_patratica &a)
 {
     for(int i=0;i<lin;i++)
     delete[]v[i];
-    complex** v=NULL;
+    delete[]v;
+     v=NULL;
 
    this->lin=a.lin;
     this->col=a.col;
@@ -586,11 +610,13 @@ matrice_patratica matrice_patratica::Inversa()
 }
 
 int main()
-{
+{ matrice*p=new matrice_patratica ;
+
     matrice_patratica a(2);
     matrice_patratica b(5);
 
-    fin>>a;
+   // fin>>*(dynamic_cast<matrice_patratica*>(p));
+     fin>>(*p);
    // fin>>b;
     //fout<<a;
 
@@ -598,14 +624,14 @@ int main()
     //fout<<b;
 
 //      a.Afisare();
-try
+/*try
 { complex p(0,0);
   if(a.CalculDet()==p) throw 12;
-  cout<<a.Inversa();
+  cout<<a.Triunghiulara();
 
-} catch(int) {cout<<"Matricea A are determinantul 0";}
-
-
+} catch(int x) {cout<<"Matricea A are determinantul 0";}
+*/
+fout<<(*p);
 
     return 0;
 }
