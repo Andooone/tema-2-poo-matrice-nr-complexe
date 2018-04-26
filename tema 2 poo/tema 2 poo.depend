@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1524725262 source:e:\info\tema 2 poo\main.cpp
+	<fstream>
+	<iostream>
+
